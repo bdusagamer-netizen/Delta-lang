@@ -1,152 +1,82 @@
 #include "commands.hpp"
-#include <iostream>
-#include <fstream>
-
 #include "../lexer/lexer.hpp"
 #include "../parser/parser.hpp"
-#include "../interpreter/interpreter.hpp"
 #include "../runtime/environment.hpp"
+#include "../runtime/cli_object.hpp"
+#include "../runtime/math_object.hpp"
+#include "../interpreter/interpreter.hpp"
+#include <fstream>
+#include <sstream>
+#include <iostream>
 
 namespace delta::cli {
 
-int run(int argc, char** argv) {
-    if (argc < 2) {
-        printHelp();
-        return 0;
-    }
-
-    std::string cmd = argv[1];
-
-    if (cmd == "run") {
-        if (argc < 3) {
-            std::cerr << "Missing file path for 'run' command\n";
-            return 1;
-        }
-        return executeFile(argv[2]);
-    }
-
-    if (cmd == "repl") {
-        return executeRepl();
-    }
-
-    if (cmd == "tokens") {
-        if (argc < 3) {
-            std::cerr << "Missing file path for 'tokens' command\n";
-            return 1;
-        }
-        return executeTokens(argv[2]);
-    }
-
-    if (cmd == "ast") {
-        if (argc < 3) {
-            std::cerr << "Missing file path for 'ast' command\n";
-            return 1;
-        }
-        return executeAst(argv[2]);
-    }
-
-    printHelp();
-    return 0;
+static void printHelp() {
+    std::cout << "delta <file>\n";
 }
 
-void printHelp() {
-    std::cout << "Delta Language CLI\n";
-    std::cout << "Usage:\n";
-    std::cout << "  delta run <file.delta>\n";
-    std::cout << "  delta repl\n";
-    std::cout << "  delta tokens <file.delta>\n";
-    std::cout << "  delta ast <file.delta>\n";
-}
-
-int executeFile(const std::string& path) {
-    std::ifstream in(path);
-    if (!in.is_open()) {
+static int executeFile(const std::string& path) {
+    std::ifstream file(path);
+    if (!file.is_open()) {
         std::cerr << "Could not open file: " << path << "\n";
         return 1;
     }
 
-    std::string source((std::istreambuf_iterator<char>(in)),
-                       std::istreambuf_iterator<char>());
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    std::string source = buffer.str();
 
     delta::Lexer lexer(source);
     auto tokens = lexer.tokenize();
 
     delta::Parser parser(tokens);
-    auto expr = parser.parse();
+    delta::ExprPtr expr = parser.parse();
 
     delta::Environment env;
-    delta::Interpreter interpreter(env);
+    delta::CLIObject cli;
+    delta::MathObject math;
+    delta::Interpreter interp(env, cli, math);
 
-    interpreter.execute(expr);
-
+    interp.execute(expr);
     return 0;
 }
 
-int executeRepl() {
-    std::cout << "Delta REPL\n";
-    std::cout << "Type 'exit' to quit\n";
-
+static int executeRepl() {
     delta::Environment env;
-    delta::Interpreter interpreter(env);
+    delta::CLIObject cli;
+    delta::MathObject math;
+    delta::Interpreter interp(env, cli, math);
 
+    std::string line;
     while (true) {
-        std::cout << ">>> ";
-        std::string line;
-        std::getline(std::cin, line);
-
-        if (line == "exit") break;
+        std::cout << "> ";
+        if (!std::getline(std::cin, line)) break;
+        if (line.empty()) continue;
 
         delta::Lexer lexer(line);
         auto tokens = lexer.tokenize();
 
         delta::Parser parser(tokens);
-        auto expr = parser.parse();
+        delta::ExprPtr expr = parser.parse();
 
-        interpreter.execute(expr);
+        interp.execute(expr);
     }
-
     return 0;
 }
 
-int executeTokens(const std::string& path) {
-    std::ifstream in(path);
-    if (!in.is_open()) {
-        std::cerr << "Could not open file: " << path << "\n";
+int run(int argc, char** argv) {
+    if (argc < 2) {
+        printHelp();
         return 1;
     }
 
-    std::string source((std::istreambuf_iterator<char>(in)),
-                       std::istreambuf_iterator<char>());
+    std::string arg = argv[1];
 
-    delta::Lexer lexer(source);
-    auto tokens = lexer.tokenize();
-
-    for (auto& t : tokens) {
-        std::cout << t.toString() << "\n";
+    if (arg == "repl") {
+        return executeRepl();
+    } else {
+        return executeFile(arg);
     }
-
-    return 0;
-}
-
-int executeAst(const std::string& path) {
-    std::ifstream in(path);
-    if (!in.is_open()) {
-        std::cerr << "Could not open file: " << path << "\n";
-        return 1;
-    }
-
-    std::string source((std::istreambuf_iterator<char>(in)),
-                       std::istreambuf_iterator<char>());
-
-    delta::Lexer lexer(source);
-    auto tokens = lexer.tokenize();
-
-    delta::Parser parser(tokens);
-    auto expr = parser.parse();
-
-    std::cout << expr->toString() << "\n";
-
-    return 0;
 }
 
 } // namespace delta::cli

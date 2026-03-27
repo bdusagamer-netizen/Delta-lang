@@ -1,52 +1,50 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <string>
 
-#include "ast/ast.hpp"
-#include "runtime/environment.hpp"
-#include "runtime/math_object.hpp"
-#include "parser/parser.hpp"
-
-using namespace delta;
-
-static std::string readFile(const std::string& path) {
-    std::ifstream file(path);
-    if (!file.is_open()) {
-        throw std::runtime_error("Could not open file: " + path);
-    }
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    return buffer.str();
-}
+#include "./lexer/lexer.hpp"
+#include "./parser/parser.hpp"
+#include "./runtime/environment.hpp"
+#include "./runtime/cli_object.hpp"
+#include "./runtime/math_object.hpp"
+#include "./interpreter/interpreter.hpp"
 
 int main(int argc, char** argv) {
+    using namespace delta;
+
     if (argc < 2) {
-        std::cerr << "Usage: delta <file.delta>\n";
+        std::cout << "Usage: delta <file>\n";
         return 1;
     }
 
-    try {
-        std::string source = readFile(argv[1]);
-
-        // Core runtime objects
-        Environment env;
-        MathObject math(env);
-
-        // Parse the program
-        Parser parser(source);
-        ExprPtr program = parser.parse();
-
-        // Evaluate the AST
-        double result = math.evaluate(program);
-
-        // Print result (optional)
-        std::cout << result << "\n";
-    }
-    catch (const std::exception& ex) {
-        std::cerr << "Error: " << ex.what() << "\n";
+    // Read file
+    std::ifstream file(argv[1]);
+    if (!file.is_open()) {
+        std::cerr << "Could not open file: " << argv[1] << "\n";
         return 1;
     }
+
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    std::string source = buffer.str();
+
+    // Lex
+    Lexer lexer(source);
+    std::vector<Token> tokens = lexer.tokenize();
+
+    // Parse
+    Parser parser(tokens);
+    ExprPtr expr = parser.parse();
+
+    // Runtime objects
+    Environment env;
+    CLIObject cli;
+    MathObject math;
+
+    Interpreter interpreter(env, cli, math);
+
+    // Execute
+    interpreter.execute(expr);
 
     return 0;
 }

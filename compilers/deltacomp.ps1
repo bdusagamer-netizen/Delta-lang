@@ -1,7 +1,12 @@
-cd "../delta"
-& "C:\msys64\ucrt64\bin\g++.exe" `
+Push-Location "$PSScriptRoot/../delta"
+
+$files = Get-ChildItem -Recurse -Filter *.cpp | ForEach-Object { $_.FullName }
+
+g++ `
     -std=c++20 `
     -O2 `
     -I "./src" `
-    ./src/*.cpp `
+    $files `
     -o "./bin/delta.exe"
+
+Pop-Location

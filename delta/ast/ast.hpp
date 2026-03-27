@@ -1,76 +1,52 @@
 #pragma once
-
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 
 namespace delta {
 
-// Forward declarations
-class Expr;
-class NumberExpr;
-class VarExpr;
-class BinaryExpr;
-class CallExpr;
-class StringExpr;
-class Statement;
-
-// Shared pointer alias
+// Forward declaration
+struct Expr;
 using ExprPtr = std::shared_ptr<Expr>;
-using StmtPtr = std::shared_ptr<Statement>;
 
-// === Base Expression ===
-class Expr {
-public:
+// Base expression node
+struct Expr {
     virtual ~Expr() = default;
 };
 
-// === Number Expression ===
-class NumberExpr : public Expr {
-public:
+// Number literal
+struct NumberExpr : Expr {
     double value;
-    explicit NumberExpr(double value) : value(value) {}
+
+    NumberExpr(double v)
+        : value(v) {}
 };
 
-// === Variable Expression ===
-class VarExpr : public Expr {
-public:
+// Variable reference
+struct VarExpr : Expr {
     std::string name;
-    explicit VarExpr(const std::string& name) : name(name) {}
+
+    VarExpr(const std::string& n)
+        : name(n) {}
 };
 
-// === Binary Expression ===
-class BinaryExpr : public Expr {
-public:
+// Binary expression (a + b, a * b, etc.)
+struct BinaryExpr : Expr {
     std::string op;
     ExprPtr left;
     ExprPtr right;
-    BinaryExpr(const std::string& op, ExprPtr left, ExprPtr right)
-        : op(op), left(left), right(right) {}
+
+    BinaryExpr(const std::string& oper, ExprPtr l, ExprPtr r)
+        : op(oper), left(l), right(r) {}
 };
 
-// === Call Expression ===
-class CallExpr : public Expr {
-public:
-    std::string callee;
+// Function / object call
+struct CallExpr : Expr {
+    ExprPtr callee;
     std::vector<ExprPtr> args;
-    CallExpr(const std::string& callee, const std::vector<ExprPtr>& args)
-        : callee(callee), args(args) {}
-};
 
-// === String Expression ===
-class StringExpr : public Expr {
-public:
-    std::string value;
-    explicit StringExpr(const std::string& value) : value(value) {}
+    CallExpr(const ExprPtr& c, const std::vector<ExprPtr>& a)
+        : callee(c), args(a) {}
 };
-
-// === Statement Base ===
-class Statement {
-public:
-    virtual ~Statement() = default;
-};
-
-// You can add specific statement types here (e.g., PrintStmt, AssignStmt)
 
 } // namespace delta

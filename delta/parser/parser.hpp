@@ -4,7 +4,6 @@
 #include <memory>
 #include "../lexer/lexer.hpp"
 #include "../ast/ast.hpp"
-#include "../ast/statements.hpp"
 
 namespace delta {
 
@@ -12,10 +11,10 @@ class Parser {
 public:
     explicit Parser(const std::vector<Token>& tokens);
 
-    // Parse a full program
-    std::vector<StmtPtr> parseProgram();
+    // Parse a full program (sequence of expressions)
+    std::vector<ExprPtr> parseProgram();
 
-    // Parse a single expression (legacy)
+    // Parse a single expression
     ExprPtr parse();
 
 private:
@@ -29,14 +28,7 @@ private:
     bool check(TokenType type) const;
     bool match(std::initializer_list<TokenType> types);
 
-    // Statements
-    StmtPtr declaration();
-    StmtPtr varDeclaration();
-    StmtPtr statement();
-    StmtPtr blockStatement();
-    StmtPtr logicstreamStatement();
-
-    // Expressions
+    // Expression grammar
     ExprPtr expression();
     ExprPtr assignment();
     ExprPtr equality();
@@ -47,9 +39,6 @@ private:
     ExprPtr dereference();
     ExprPtr primary();
     ExprPtr objectCall(ExprPtr callee);
-
-    // Helpers for logicstream/event
-    LogicstreamRule parseLogicstreamRule();
 };
 
 } // namespace delta

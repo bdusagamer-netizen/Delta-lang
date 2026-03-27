@@ -6,16 +6,6 @@ namespace delta {
 Lexer::Lexer(const std::string& src)
     : source(src) {}
 
-std::vector<Token> Lexer::tokenize() {
-    while (!isAtEnd()) {
-        start = current;
-        scanToken();
-    }
-
-    tokens.push_back({TokenType::END_OF_FILE, "", line});
-    return tokens;
-}
-
 bool Lexer::isAtEnd() const {
     return current >= source.size();
 }
@@ -42,91 +32,69 @@ bool Lexer::match(char expected) {
 }
 
 void Lexer::addToken(TokenType type) {
-    tokens.push_back({type, source.substr(start, current - start), line});
+    std::string text = source.substr(start, current - start);
+    tokens.push_back({type, text, line});
 }
 
-void Lexer::addToken(TokenType type, const std::string& text) {
-    tokens.push_back({type, text, line});
+void Lexer::number() {
+    while (std::isdigit(peek())) advance();
+
+    if (peek() == '.' && std::isdigit(peekNext())) {
+        advance(); // consume '.'
+        while (std::isdigit(peek())) advance();
+    }
+
+    addToken(TokenType::NUMBER);
+}
+
+void Lexer::identifier() {
+    while (std::isalnum(peek()) || peek() == '_') advance();
+    addToken(TokenType::IDENTIFIER);
 }
 
 void Lexer::scanToken() {
     char c = advance();
 
     switch (c) {
-
         case '(':
             addToken(TokenType::LEFT_PAREN);
             break;
-
         case ')':
             addToken(TokenType::RIGHT_PAREN);
             break;
-
-        case '{':
-            addToken(TokenType::LEFT_BRACE);
-            break;
-
-        case '}':
-            addToken(TokenType::RIGHT_BRACE);
-            break;
-
         case ',':
             addToken(TokenType::COMMA);
             break;
-
-        case '.':
-            addToken(TokenType::DOT);
-            break;
-
-        case ';':
-            addToken(TokenType::SEMICOLON);
-            break;
-
         case '+':
             addToken(TokenType::PLUS);
             break;
-
         case '-':
             addToken(TokenType::MINUS);
             break;
-
         case '*':
             addToken(TokenType::STAR);
             break;
-
         case '/':
             addToken(TokenType::SLASH);
             break;
 
-        case '~':
-            addToken(TokenType::TILDE);
-            break;
-
-        case '=':
-            if (match('=')) addToken(TokenType::EQUAL_EQUAL);
-            else if (match('>')) addToken(TokenType::PRINT_EVAL);
-            else addToken(TokenType::EQUAL);
-            break;
-
-        case '!':
-            if (match('=')) addToken(TokenType::BANG_EQUAL);
-            else addToken(TokenType::BANG);
-            break;
-
-        case '<':
-            if (match('=')) addToken(TokenType::LESS_EQUAL);
-            else addToken(TokenType::LEFT_ANGLE);
-            break;
-
+        // Comparisons
         case '>':
-            if (match('=')) addToken(TokenType::GREATER_EQUAL);
-            else addToken(TokenType::RIGHT_ANGLE);
+            addToken(match('=') ? TokenType::GREATER_EQUAL : TokenType::GREATER);
+            break;
+        case '<':
+            addToken(match('=') ? TokenType::LESS_EQUAL : TokenType::LESS);
             break;
 
-        case '"':
-            stringLiteral();
+        // Equality
+        case '=':
+            addToken(match('=') ? TokenType::EQUAL_EQUAL : TokenType::IDENTIFIER);
+            break;
+        case '!':
+            addToken(match('=') ? TokenType::BANG_EQUAL : TokenType::IDENTIFIER);
             break;
 
+        // Whitespace
         case ' ':
         case '\r':
         case '\t':
@@ -138,7 +106,7 @@ void Lexer::scanToken() {
 
         default:
             if (std::isdigit(c)) {
-                numberLiteral();
+                number();
             } else if (std::isalpha(c) || c == '_') {
                 identifier();
             }
@@ -146,49 +114,14 @@ void Lexer::scanToken() {
     }
 }
 
-void Lexer::stringLiteral() {
-    while (peek() != '"' && !isAtEnd()) {
-        if (peek() == '\n') line++;
-        advance();
+std::vector<Token> Lexer::tokenize() {
+    while (!isAtEnd()) {
+        start = current;
+        scanToken();
     }
 
-    if (isAtEnd()) return;
-
-    advance(); // closing quote
-
-    std::string value = source.substr(start + 1, current - start - 2);
-    addToken(TokenType::STRING, value);
-}
-
-void Lexer::numberLiteral() {
-    while (std::isdigit(peek())) advance();
-
-    if (peek() == '.' && std::isdigit(peekNext())) {
-        advance();
-        while (std::isdigit(peek())) advance();
-    }
-
-    addToken(TokenType::NUMBER, source.substr(start, current - start));
-}
-
-void Lexer::identifier() {
-    while (std::isalnum(peek()) || peek() == '_') advance();
-
-    std::string text = source.substr(start, current - start);
-    addToken(keywordType(text), text);
-}
-
-TokenType Lexer::keywordType(const std::string& text) {
-    if (text == "var") return TokenType::VAR;
-    if (text == "cli") return TokenType::CLI;
-    if (text == "logicstream") return TokenType::LOGICSTREAM;
-    if (text == "on") return TokenType::ON;
-    if (text == "event") return TokenType::EVENT;
-    if (text == "if") return TokenType::IF;
-    if (text == "else") return TokenType::ELSE;
-    if (text == "math") return TokenType::MATH;
-
-    return TokenType::IDENTIFIER;
+    tokens.push_back({TokenType::END_OF_FILE, "", line});
+    return tokens;
 }
 
 } // namespace delta

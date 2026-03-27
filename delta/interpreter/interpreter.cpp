@@ -1,4 +1,12 @@
+#include <memory>
+#include <string>
+
 #include "interpreter.hpp"
+#include "../ast/ast.hpp"              // Expr, ExprPtr, CallExpr, VarExpr
+#include "../runtime/value.hpp"                 // Value
+#include "../runtime/environment.hpp"
+#include "../runtime/cli_object.hpp"
+#include "../runtime/math_object.hpp"
 
 namespace delta {
 
@@ -31,7 +39,8 @@ void Interpreter::evalCall(const CallExpr* call) {
     }
 
     if (name == "cli-printout=>") {
-        double value = math.evaluate(call->args[0]);
+        Value result = env.evaluate(call->args[0]);   // your evaluator
+        double value = result.asNumber();
         cli.printEvaluatedValue(value);
         return;
     }

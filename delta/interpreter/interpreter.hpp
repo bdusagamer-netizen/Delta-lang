@@ -1,18 +1,18 @@
-#pragma once
+ #pragma once
 
-#include "../ast/ast.hpp"
-#include "../ast/call_expr.hpp"
-#include "environment.hpp"
-#include "cli_object.hpp"
-#include "math_object.hpp"
+#include <memory>
+#include "../runtime/value.hpp"
+#include "../runtime/environment.hpp"
+#include "../runtime/cli_object.hpp"
+#include "../runtime/math_object.hpp"
+#include "../ast/ast.hpp"   // where Expr, CallExpr, VarExpr, ExprPtr live
 
 namespace delta {
 
 class Interpreter {
 public:
-    Interpreter(Environment& env, CLIObject& cli, MathObject& math);
+    Interpreter(Environment& e, CLIObject& c, MathObject& m);
 
-    // Execute a single expression (minimal mode)
     void execute(const ExprPtr& expr);
 
 private:

@@ -1,28 +1,28 @@
 #pragma once
-
-#include "./ast/ast.hpp"
-#include "environment.hpp"
+#include <vector>
+#include <string>
 
 namespace delta {
 
+class Value;   // forward declaration if you add Value later
+
 class MathObject {
 public:
-    explicit MathObject(Environment& env);
-    double evaluate(const ExprPtr& expr);
+    MathObject() = default;
 
-private:
-    Environment& env;
+    // Basic math functions (extend as needed)
+    double sin(double x) const;
+    double cos(double x) const;
+    double tan(double x) const;
+    double sqrt(double x) const;
+    double pow(double base, double exp) const;
 
-    double evalNumber(const NumberExpr* num);
-    double evalVar(const VarExpr* var);
-    double evalBinary(const BinaryExpr* bin);
+    // Random utilities (optional — implement or remove)
+    double randomFloat() const;
+    int randomInt(int a, int b) const;
 
-    // New math functions
-    double evalRandom();
-    double evalSqrt(const ExprPtr& arg);
-    double evalCbrt(const ExprPtr& arg);
-    double evalNthrt(const ExprPtr& base, const ExprPtr& n);
-    double evalFrthrt(const ExprPtr& arg); // Assuming frthrt = fourth root
+    // If you don't use Value yet, comment this out:
+    // Value randomList(const std::vector<Value>& list) const;
 };
 
 } // namespace delta

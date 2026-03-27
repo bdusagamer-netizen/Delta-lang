@@ -1,44 +1,51 @@
 #include "cli_object.hpp"
-#include "../ast/string_expr.hpp"
+#include <iostream>
 
 namespace delta {
 
-CLIObject::CLIObject(Environment& e)
-    : env(e) {}
-
 void CLIObject::printSymbolic(const ExprPtr& expr) {
-    if (!expr) {
-        std::cout << "null\n";
-        return;
-    }
-    std::cout << expr->toString() << "\n";
-}
-
-void CLIObject::printEvaluated(const ExprPtr& expr) {
-    if (!expr) {
-        std::cout << "null\n";
-        return;
-    }
-    // This assumes env.evaluate(expr) uses MathObject internally
-    double value = env.evaluate(expr);
-    std::cout << value << "\n";
+    printExpr(expr);
+    std::cout << "\n";
 }
 
 void CLIObject::printEvaluatedValue(double value) {
     std::cout << value << "\n";
 }
 
-void CLIObject::inputToVar(const std::string& name) {
-    std::string input;
-    std::getline(std::cin, input);
-    env.set(name, std::make_shared<StringExpr>(input));
-}
+void CLIObject::printExpr(const ExprPtr& expr) {
+    if (!expr) {
+        std::cout << "nil";
+        return;
+    }
 
-void CLIObject::inputToVarWithEvent(const std::string& name, const std::string& eventId) {
-    std::string input;
-    std::getline(std::cin, input);
-    env.set(name, std::make_shared<StringExpr>(input));
-    // event dispatch will be added later
+    // Number literal
+    if (auto num = dynamic_cast<NumberExpr*>(expr.get())) {
+        std::cout << num->value;
+        return;
+    }
+
+    // Variable
+    if (auto var = dynamic_cast<VarExpr*>(expr.get())) {
+        std::cout << var->name;
+        return;
+    }
+
+    // Function/object call
+    if (auto call = dynamic_cast<CallExpr*>(expr.get())) {
+        std::cout << "(";
+        printExpr(call->callee);
+
+        for (size_t i = 0; i < call->args.size(); ++i) {
+            std::cout << " ";
+            printExpr(call->args[i]);
+        }
+
+        std::cout << ")";
+        return;
+    }
+
+    // Fallback for unknown nodes
+    std::cout << "<expr>";
 }
 
 } // namespace delta
