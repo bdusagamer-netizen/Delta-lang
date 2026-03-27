@@ -1,0 +1,16 @@
+var(sum=math(3 + 2));
+var(problem=3 + 2);
+var(answer=~null)
+cli(
+    cli-printout<=("Are you smarter than a kindergartener?)
+    cli-printout<=("What is " + ~<problem> + " ?")
+    cli-input=>(tovar(answer); eventid="user answered!")
+)
+logicstream(
+    on (event ~<user answered!>; if ~<answer> == ~<sum>){
+    cli-printout<=("correct")
+    )else(
+        cli-printout<=("incorrect")
+    )
+    }
+

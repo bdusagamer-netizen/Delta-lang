@@ -1,0 +1,71 @@
+{
+  "name": "delta-lang",
+  "displayName": "Delta Language Support",
+  "description": "Language support, syntax highlighting, and tooling for the Delta programming language.",
+  "publisher": "glenn",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+
+  "main": "./out/extension.js",
+
+  "activationEvents": [],
+
+  "contributes": {
+    "languages": [
+      {
+        "id": "delta",
+        "aliases": ["Delta", "delta"],
+        "extensions": [".delta"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+
+    "grammars": [
+      {
+        "language": "delta",
+        "scopeName": "source.delta",
+        "path": "./syntaxes/delta.tmLanguage.json"
+      }
+    ],
+
+    "commands": [
+      {
+        "command": "delta.runFile",
+        "title": "Run Delta File"
+      }
+    ],
+
+    "menus": {
+      "editor/title": [
+        {
+          "command": "delta.runFile",
+          "when": "resourceLangId == delta",
+          "group": "navigation"
+        }
+      ]
+    },
+
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "deltaSidebar",
+          "title": "Delta",
+          "icon": "media/icon.png"
+        }
+      ]
+    },
+
+    "views": {
+      "deltaSidebar": [
+        {
+          "id": "deltaLibraries",
+          "name": "Libraries",
+          "icon": "media/icon.png"
+
+        }
+      ]
+    }
+  }
+}
