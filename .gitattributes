@@ -2,4 +2,5 @@
 *.dscript linguist-language=DeltaScript
 *.dwill linguist-language=DeltaWill
 *.ddev linguist-language=DeltaDev
+
 *.dlib linguist-language=DeltaLib
